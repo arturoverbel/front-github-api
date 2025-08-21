@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/front-github-api/static/css/main.c00173c4.css",
+    "main.js": "/front-github-api/static/js/main.3f07dec9.js",
+    "static/js/453.a384ac7a.chunk.js": "/front-github-api/static/js/453.a384ac7a.chunk.js",
+    "index.html": "/front-github-api/index.html",
+    "main.c00173c4.css.map": "/front-github-api/static/css/main.c00173c4.css.map",
+    "main.3f07dec9.js.map": "/front-github-api/static/js/main.3f07dec9.js.map",
+    "453.a384ac7a.chunk.js.map": "/front-github-api/static/js/453.a384ac7a.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.c00173c4.css",
+    "static/js/main.3f07dec9.js"
+  ]
+}
