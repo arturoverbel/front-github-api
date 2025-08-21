@@ -1,33 +1,129 @@
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, FormEvent } from "react";
 
-export default function Dashboard() {
-  const navigate = useNavigate();
+import "../styles/Accounts.css";
+import Profile from "../components/Profile";
+import Repositories from "../components/Repositories";
 
-  useEffect(() => {
-    const token = localStorage.getItem("jwt");
-    if (!token) {
-      navigate("/login");
+interface GitHubUser {
+  avatar_url: string;
+  name: string;
+  login: string;
+  bio: string;
+  public_repos: number;
+  followers: number;
+  following: number;
+}
+
+interface GitHubRepo {
+  id: number;
+  name: string;
+  html_url: string;
+  description: string;
+  language: string;
+  stargazers_count: number;
+  forks_count: number;
+}
+
+const Accounts: React.FC = () => {
+  const [username, setUsername] = useState("");
+  const [user, setUser] = useState<GitHubUser | null>(null);
+  const [repos, setRepos] = useState<GitHubRepo[]>([]);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSearch = async (e: FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setUser(null);
+    setRepos([]);
+    setLoading(true);
+
+    try {
+      const userRes = await fetch(`https://api.github.com/users/${username}`);
+      if (!userRes.ok) {
+        if (userRes.status === 404) {
+          throw new Error("User not found. Please check the username.");
+        }
+        throw new Error("Failed to fetch user data.");
+      }
+      const userData = await userRes.json();
+
+      const reposRes = await fetch(`https://api.github.com/users/${username}/repos`);
+      if (!reposRes.ok) {
+        throw new Error("Failed to fetch repositories.");
+      }
+      const reposData = await reposRes.json();
+
+      setUser(userData);
+      setRepos(reposData);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
-  }, [navigate]);
+  };
 
-  const logout = () => {
+  const handleLogout = () => {
     localStorage.removeItem("jwt");
-    navigate("/login");
+    window.location.href = "/";
   };
 
   return (
-    <div className="flex h-screen items-center justify-center bg-gray-100">
-      <div className="rounded-lg border border-gray-300 bg-white p-8 shadow-sm">
-        <h1 className="mb-4 text-2xl font-semibold text-gray-900">Welcome!</h1>
-        <p className="mb-4 text-gray-700">You are authenticated 🎉</p>
+    <div className="app-container">
+      <div className="page-header">
         <button
-          onClick={logout}
-          className="rounded-md bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+          onClick={handleLogout}
+          className="logout-button"
         >
           Logout
         </button>
       </div>
+
+      <div className="main-card">
+        <h1 className="main-title">
+          GitHub Profile Viewer
+        </h1>
+
+        <form onSubmit={handleSearch} className="search-form">
+          <input
+            type="text"
+            placeholder="Enter GitHub username..."
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+            className="search-input"
+          />
+          <button
+            type="submit"
+            disabled={loading}
+            className="search-button"
+          >
+            {loading ? "Searching..." : "Search"}
+          </button>
+        </form>
+
+        {error && <p className="error-message">{error}</p>}
+        {loading && !user && !error && (
+            <div className="loading-message">Loading user profile...</div>
+        )}
+
+        {user && (
+            <Profile {...user} />
+        )}
+
+        {user && repos.length > 0 && (
+            <h2 className="repo-section-title">
+                Repositories ({repos.length})
+            </h2>
+        )}
+        
+        <Repositories repos={repos} />
+        {user && repos.length === 0 && !loading && (
+            <div className="no-repos-message">This user has no public repositories.</div>
+        )}
+      </div>
     </div>
   );
-}
+};
+
+export default Accounts;
